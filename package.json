@@ -1,6 +1,6 @@
 {
     "name": "cognito-exporter",
-    "base": "/cognito-exporter",
+    "homepage": "https://solomojb.github.io/cognito-exporter/",
     "private": true,
     "version": "0.0.0",
     "type": "module",
