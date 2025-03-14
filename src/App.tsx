@@ -80,7 +80,7 @@ export const App = () => {
             const first = fields[i];
             const field1 = convertField(first);
             const second = fields[i + 1];
-            const field2 = convertField(second);
+            const field2 = second ? convertField(second) : [];
             const page: ISectionOptions = {
                 properties: {
                     column: {
