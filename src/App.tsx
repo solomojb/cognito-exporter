@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import "./App.css";
 import * as xlsx from "xlsx";
-import { Document, ISectionOptions, Packer, Paragraph, TextRun, Column, ColumnBreak } from "docx";
+import { Document, ISectionOptions, Packer, Paragraph, TextRun, ColumnBreak } from "docx";
 import saveAs from "file-saver";
 
 const convertField = (field: Record<string, string>) => {
