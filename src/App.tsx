@@ -1,8 +1,48 @@
 import { useRef, useState } from "react";
 import "./App.css";
 import * as xlsx from "xlsx";
-import { Document, ISectionOptions, Packer, Paragraph, TextRun } from "docx";
+import { Document, ISectionOptions, Packer, Paragraph, TextRun, Column, ColumnBreak } from "docx";
 import saveAs from "file-saver";
+
+const convertField = (field: Record<string, string>) => {
+    return Object.entries(field)
+        .filter(([key, value]) => {
+            if (Number.isInteger(value)) {
+                const num = parseInt(value);
+                if (!num) {
+                    return false;
+                }
+            }
+            if (
+                key.includes("Entry_") ||
+                key.includes("5050Raffle_Total") ||
+                key.includes("Name_First") ||
+                key.includes("Name_Last") ||
+                key.includes("Email") ||
+                key.includes("Phone") ||
+                key.includes("TotalCost") ||
+                key.includes("HowDoYouPlanOnPaying")
+
+            ) {
+                return false;
+            }
+            return true;
+        })
+        .map(([key, value]) => {
+            let label = key.replace("_", " ");
+            if (key.includes("_Id")) {
+                label = "Id";
+            } else if (key.includes("_Tickets")) {
+                label = key.substring(0, key.indexOf("_Tickets"));
+            }
+            label = label.replace("_", " ").trim();
+            return new TextRun({
+                text: label ? `${label}: ${value}` : ` ${value}`,
+                break: 2,
+                size: '14pt',
+            });
+        });
+}
 
 export const App = () => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -35,49 +75,29 @@ export const App = () => {
         if (!fields) {
             return;
         }
-        const sections: ISectionOptions[] = fields.map((field) => {
-            const children = Object.entries(field)
-                .filter(([key, value]) => {
-                    if (Number.isInteger(value)) {
-                        const num = parseInt(value);
-                        if (!num) {
-                            return false;
-                        }
-                    }
-                    if (
-                        key.includes("Entry_") ||
-                        key.includes("5050Raffle_Total")
-                    ) {
-                        return false;
-                    }
-                    return true;
-                })
-                .map(([key, value]) => {
-                    let label = key.replace("_", " ");
-                    if (key.includes("_Id")) {
-                        label = "Id";
-                    } else if (key.includes("_Tickets")) {
-                        label = key.substring(0, key.indexOf("_Tickets"));
-                    } else if (key.includes("Name_Last")) {
-                        label = "";
-                    }
-                    label = label.replace("_", " ").trim();
-                    return new TextRun({
-                        text: label ? `${label}: ${value}` : ` ${value}`,
-                        break: key !== "Name_Last" ? 1 : undefined,
-                    });
-                });
-            return {
+        const sections: ISectionOptions[] = [];
+        for (let i = 0; i < fields.length; i += 2) {
+            const first = fields[i];
+            const field1 = convertField(first);
+            const second = fields[i + 1];
+            const field2 = convertField(second);
+            const page: ISectionOptions = {
                 properties: {
-                    type: "nextPage",
+                    column: {
+                        space: 708,
+                        equalWidth: true,
+                        count: 2
+                    }
                 },
                 children: [
                     new Paragraph({
-                        children,
+                        children: [...field1, new ColumnBreak(), ...field2],
                     }),
                 ],
             };
-        });
+            sections.push(page);
+
+        }
         const document = new Document({
             sections,
         });
